@@ -132,7 +132,7 @@ app.post("/login", async (req, res) => {
         {},
         (err, token) => {
           if (err) throw err;
-          console.log(token);
+          //   console.log(token);
           res.cookie("token", token).json({ username, email, user_id });
         }
       );
@@ -175,6 +175,10 @@ app.get("/profile", (req, res) => {
     res.json(null);
     console.log("No token found");
   }
+});
+
+app.post("/logout", (req, res) => {
+  res.cookie("token", "").json(true);
 });
 
 app.listen(port, () => {
