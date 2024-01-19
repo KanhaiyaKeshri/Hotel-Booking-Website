@@ -9,6 +9,8 @@ import jwt from "jsonwebtoken";
 import imageDownloader from "image-downloader";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import multer from "multer";
+import fs from "fs";
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -16,6 +18,7 @@ app.use(cookieParser());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const uploadsPath = join(__dirname, "uploads");
+app.use("/uploads", express.static(uploadsPath));
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = 3000;
 
@@ -215,6 +218,20 @@ app.post("/upload-by-link", async (req, res) => {
     console.error(error);
     res.status(500).send("Internal Server Error");
   }
+});
+const photoMiddleware = multer({ dest: "uploads/" });
+app.post("/upload", photoMiddleware.array("photos", 100), (req, res) => {
+  const uploadedFiles = [];
+  for (let i = 0; i < req.files.length; i++) {
+    const { path, originalname } = req.files[i];
+    const parts = originalname.split(".");
+    const ext = parts[parts.length - 1];
+    const newPath = path + "." + ext;
+    fs.renameSync(path, newPath);
+    uploadedFiles.push(newPath.replace("uploads", ""));
+  }
+  console.log(uploadedFiles);
+  res.json(uploadedFiles);
 });
 
 app.listen(port, () => {
