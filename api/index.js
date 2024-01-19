@@ -6,10 +6,16 @@ import pg from "pg";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-
+import imageDownloader from "image-downloader";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const uploadsPath = join(__dirname, "uploads");
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = 3000;
 
@@ -179,6 +185,36 @@ app.get("/profile", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.cookie("token", "").json(true);
+});
+
+//
+// app.post("/upload-by-link", async (req, res) => {
+//   const { link } = req.body;
+//   const newName = "photo" + Date.now() + ".jpg";
+//   await imageDownloader.image({
+//     url: link,
+//     dest: "./uploads" + newName,
+//   });
+//   res.json(newName);
+// });
+
+app.post("/upload-by-link", async (req, res) => {
+  const { link } = req.body;
+  const newName = "photo" + Date.now() + ".jpg";
+
+  // Use path.join to create an absolute path
+  const dest = join(uploadsPath, newName);
+  try {
+    await imageDownloader.image({
+      url: link,
+      dest: dest,
+    });
+
+    res.json(newName);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.listen(port, () => {
