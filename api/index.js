@@ -230,8 +230,144 @@ app.post("/upload", photoMiddleware.array("photos", 100), (req, res) => {
     fs.renameSync(path, newPath);
     uploadedFiles.push(newPath.replace("uploads", ""));
   }
-  console.log(uploadedFiles);
   res.json(uploadedFiles);
+});
+
+app.post("/places", async (req, res) => {
+  const { token } = req.cookies;
+
+  const {
+    title,
+    address,
+    addedPhotos,
+    description,
+    perks,
+    extraInfo,
+    checkIn,
+    checkOut,
+    maxGuests,
+  } = req.body;
+
+  try {
+    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+      const result = await db.query(
+        "INSERT INTO place (owner_id, title, address, photos, description, perks, extra_info, check_in, check_out, max_guests) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+        [
+          userData.id,
+          title,
+          address,
+          addedPhotos,
+          description,
+          perks,
+          extraInfo,
+          checkIn,
+          checkOut,
+          maxGuests,
+        ]
+      );
+
+      const placeDoc = result.rows[0];
+      res.json(placeDoc);
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get("/user-places", async (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const userData = jwt.verify(token, jwtSecret);
+    const { id } = userData;
+    const result = await db.query("SELECT * FROM place WHERE owner_id = $1", [
+      id,
+    ]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/places/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query("SELECT * FROM place WHERE place_id = $1", [
+      id,
+    ]);
+
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ error: "Place not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.put("/places", async (req, res) => {
+  const { token } = req.cookies;
+  const {
+    id,
+    title,
+    address,
+    addedPhotos,
+    description,
+    perks,
+    extraInfo,
+    checkIn,
+    checkOut,
+    maxGuests,
+  } = req.body;
+
+  try {
+    const userData = jwt.verify(token, jwtSecret);
+
+    // Assuming you have a 'place' table in PostgreSQL
+    const query = `
+      UPDATE place
+      SET
+        title = $1,
+        address = $2,
+        photos = $3,
+        description = $4,
+        perks = $5,
+        extra_info = $6,
+        check_in = $7,
+        check_out = $8,
+        max_guests = $9
+      WHERE
+        place_id = $10
+        AND owner_id = $11;
+    `;
+
+    const result = await db.query(query, [
+      title,
+      address,
+      addedPhotos,
+      description,
+      perks,
+      extraInfo,
+      checkIn,
+      checkOut,
+      maxGuests,
+      id,
+      userData.id,
+    ]);
+
+    if (result.rowCount > 0) {
+      res.json("ok");
+    } else {
+      res.status(403).json({ error: "Unauthorized" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 app.listen(port, () => {
