@@ -246,12 +246,13 @@ app.post("/places", async (req, res) => {
     checkIn,
     checkOut,
     maxGuests,
+    price,
   } = req.body;
 
   try {
     jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       const result = await db.query(
-        "INSERT INTO place (owner_id, title, address, photos, description, perks, extra_info, check_in, check_out, max_guests) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+        "INSERT INTO place (owner_id, title, address, photos, description, perks, extra_info, check_in, check_out, max_guests,price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) RETURNING *",
         [
           userData.id,
           title,
@@ -263,6 +264,7 @@ app.post("/places", async (req, res) => {
           checkIn,
           checkOut,
           maxGuests,
+          price,
         ]
       );
 
@@ -322,6 +324,7 @@ app.put("/places", async (req, res) => {
     checkIn,
     checkOut,
     maxGuests,
+    price,
   } = req.body;
 
   try {
@@ -339,10 +342,12 @@ app.put("/places", async (req, res) => {
         extra_info = $6,
         check_in = $7,
         check_out = $8,
-        max_guests = $9
+        max_guests = $9,
+        price = $10
+
       WHERE
-        place_id = $10
-        AND owner_id = $11;
+        place_id = $11
+        AND owner_id = $12;
     `;
 
     const result = await db.query(query, [
@@ -355,6 +360,7 @@ app.put("/places", async (req, res) => {
       checkIn,
       checkOut,
       maxGuests,
+      price,
       id,
       userData.id,
     ]);
@@ -366,6 +372,16 @@ app.put("/places", async (req, res) => {
     }
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/places", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM place");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error executing query:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
