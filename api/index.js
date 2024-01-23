@@ -386,6 +386,34 @@ app.get("/places", async (req, res) => {
   }
 });
 
+app.post("/bookings", async (req, res) => {
+  const { token } = req.cookies;
+
+  const { place_id, checkIn, checkOut, numberOfGuests, name, phone, price } =
+    req.body;
+  try {
+    const userData = jwt.verify(token, jwtSecret);
+
+    const result = await db.query(
+      "INSERT INTO booking (place_id,user_id,check_in,check_out,name,phone,price,numberOfGuests) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+      [
+        place_id,
+        userData.id,
+        checkIn,
+        checkOut,
+        name,
+        phone,
+        price,
+        numberOfGuests,
+      ]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server Listening on port ${port}`);
 });
