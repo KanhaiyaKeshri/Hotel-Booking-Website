@@ -40,6 +40,14 @@ const rounds = process.env.SALTROUNDS;
 const jwtSecret = "fjsfjfjlsfjsfjsfjweoeurwrwir";
 db.connect();
 
+function getUserDataFromReq(req) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
+      if (err) throw err;
+      resolve(userData);
+    });
+  });
+}
 app.get("/test", (req, res) => {
   res.json("test Okay");
 });
@@ -73,7 +81,7 @@ app.get("/test", (req, res) => {
 
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
-  console.log(name + " " + email + " " + password);
+  //console.log(name + " " + email + " " + password);
 
   // Check if email and password are provided for manual registration
   if (!email || !password || !name) {
@@ -413,7 +421,44 @@ app.post("/bookings", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.get("/bookings", async (req, res) => {
+  try {
+    const userData = await getUserDataFromReq(req);
 
+    // const query = `
+    //   SELECT b.*, p.*
+    //   FROM booking b
+    //   JOIN place p ON b.place_id = p.place_id
+    //   WHERE b.user_id = $1;
+    // `;
+    const query = `
+    SELECT 
+      b.check_in AS booking_check_in, 
+      b.check_out AS booking_check_out,
+      b.price AS booking_price,
+      b.*, 
+      p.*  
+    FROM booking b
+    JOIN place p ON b.place_id = p.place_id
+    WHERE b.user_id = $1;
+  `;
+
+    const values = [userData.id];
+
+    const result = await db.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No bookings found for the user" });
+    }
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 app.listen(port, () => {
   console.log(`Server Listening on port ${port}`);
 });
