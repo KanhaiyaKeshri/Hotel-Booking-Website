@@ -8,7 +8,7 @@ function PhotosUploader(props) {
     const { data: filename } = await axios.post("/upload-by-link", {
       link: photolink,
     });
-    console.log({ filename });
+    // console.log({ filename });
     props.setAddedPhotos((prevValue) => {
       return [...prevValue, filename];
     });

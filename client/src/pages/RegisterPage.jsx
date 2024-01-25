@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import React, { useState } from "react";
 import axios from "axios";
 
@@ -6,6 +6,7 @@ function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [redirect, setRedirect] = useState("");
   function handleChangeName(event) {
     const newValue = event.target.value;
     setName(newValue);
@@ -22,10 +23,21 @@ function RegisterPage() {
         email,
         password,
       });
-      alert("Registration Successful, Now you can Login");
+      // alert("Registration Successful, Now you can Login");
+      setName("");
+      setEmail("");
+      setPassword("");
+      // setRedirect("/login");
+      setTimeout(() => {
+        alert("Registration Successful, Now you can Login");
+        setRedirect("/login");
+      }, 0);
     } catch (error) {
       alert("Registration Failed, Try again!");
     }
+  }
+  if (redirect) {
+    return <Navigate to={redirect} />;
   }
   return (
     <div className="mt-4 grow flex items-center justify-around">

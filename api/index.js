@@ -52,33 +52,6 @@ app.get("/test", (req, res) => {
   res.json("test Okay");
 });
 
-// app.post("/register", async (req, res) => {
-//   const { name, email, password } = req.body;
-//   console.log(name + " " + email + " " + password);
-//   // Check if email and password are provided for manual registration
-//   if (!email || !password || !name) {
-//     console.log("Name, Email and Password are Mandatory Field");
-//   }
-//   // Check if the user is already registered
-//   const existingUser = await db.query("SELECT * FROM users WHERE email = $1", [
-//     email,
-//   ]);
-//   if (existingUser.rows.length > 0) {
-//     console.log("User Email is Already Registered use some other Email");
-//   }
-//   bcrypt.hash(password, rounds, async (err, hash) => {
-//     try {
-//       const userDoc = await db.query(
-//         "INSERT INTO users (username,email, password) VALUES ($1, $2, $3)",
-//         [name, email, hash]
-//       );
-//       res.json(userDoc);
-//     } catch (error) {
-//       console.log(error);
-//     }
-//   });
-// });
-
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   //console.log(name + " " + email + " " + password);
@@ -197,17 +170,6 @@ app.get("/profile", (req, res) => {
 app.post("/logout", (req, res) => {
   res.cookie("token", "").json(true);
 });
-
-//
-// app.post("/upload-by-link", async (req, res) => {
-//   const { link } = req.body;
-//   const newName = "photo" + Date.now() + ".jpg";
-//   await imageDownloader.image({
-//     url: link,
-//     dest: "./uploads" + newName,
-//   });
-//   res.json(newName);
-// });
 
 app.post("/upload-by-link", async (req, res) => {
   const { link } = req.body;
